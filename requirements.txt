@@ -3,3 +3,5 @@ matplotlib
 openpyxl
 seaborn
 pulp
+plotly.express
+streamlit
