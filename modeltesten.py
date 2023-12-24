@@ -56,7 +56,7 @@ def krijg_interval_range(row):
         
 def get_laadlocaties(ritten):
     df_laadlocaties = pd.read_excel(ritten, sheet_name = 'laadlocaties')
-    df_laden = pd.read_excel('template_opdorp_test.xlsx', sheet_name = 'laden')
+    df_laden = pd.read_excel(ritten, sheet_name = 'laden')
     laadlocaties = df_laadlocaties["Positie"].values.tolist()
     laadactiviteiten = df_laden["Activiteit"].values.tolist()
     return laadlocaties, laadactiviteiten
