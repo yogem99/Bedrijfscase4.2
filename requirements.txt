@@ -3,5 +3,5 @@ matplotlib
 openpyxl
 seaborn
 pulp
-plotly.express
+plotly
 streamlit
