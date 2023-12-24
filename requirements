@@ -1,0 +1,5 @@
+xlsxwriter
+matplotlib
+openpyxl
+seaborn
+pulp
