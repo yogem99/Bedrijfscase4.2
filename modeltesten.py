@@ -6,6 +6,7 @@ import numpy as np
 pd.set_option('display.max_columns', None)
 import plotly.express as px
 import pulp as plp
+import plotly.subplots as sp
 
 def check_file(file):
 	
@@ -330,14 +331,14 @@ def make_model(df_merged,naam_kolommen_laadpalen_rijden,df_I_J,accu,efficiency,l
     
     df_merged['Cumulatieve_kosten'] = df_merged.groupby("Voertuig")["Kosten"].cumsum()
     #resultaten opslaan
-    voertuigkosten = pd.DataFrame(columns=["Voertuig","Laadtijd_min","Kosten_euro"])
+    voertuigkosten = pd.DataFrame(columns=["Voertuig","Totale_kosten_euro","Kosten_per_100_gereden_km"])
     for voertuig in df_merged['Voertuig'].unique():
-        laadtijd_min = df_merged[df_merged['Voertuig'] == voertuig]['Laadtijd_min'].sum()
+        prijs_per_km = df_merged[df_merged['Voertuig'] == voertuig]['Kosten'].sum() / df_merged[df_merged['Voertuig'] == voertuig]['Afstand'].sum() * 100
         kosten = df_merged[df_merged['Voertuig'] == voertuig]['Kosten'].sum()
         if isinstance(voertuig,str):
-          voertuigkosten.loc[len(voertuigkosten)]=[voertuig,round(laadtijd_min,2),round(kosten,2)]
+          voertuigkosten.loc[len(voertuigkosten)]=[voertuig,round(kosten,2),round(prijs_per_km,2)]
         else:  
-          voertuigkosten.loc[len(voertuigkosten)]=[round(voertuig/1),round(laadtijd_min,2),round(kosten,2)]
+          voertuigkosten.loc[len(voertuigkosten)]=[round(voertuig/1),round(kosten,2),round(prijs_per_km,2)]
     
     return df_merged,check_model,voertuigkosten
   
@@ -354,6 +355,43 @@ def show_plots_kosten(df_voertuig):
     fig = px.line(df_voertuig, x='eind_output', y='Kosten', title='Kosten Over Tijd')
     fig.update_xaxes(title_text='Tijd')
     st.plotly_chart(fig)
+    
+# Functie voor de analyse figuren
+def Analyse(data):
+    # Eerste plot - Gemiddelde energieprijzen per tijdsblok
+    data['Tijdblok'] = data['Tijdblok'].astype(int)
+    gemiddelde_per_tijdsblok = data[data['Activiteit']!='Rijden'].groupby('Tijdblok')['[EUR/MWh]'].mean()
+    fig1 = px.bar(x=gemiddelde_per_tijdsblok.index, y=gemiddelde_per_tijdsblok)
+ 
+    # Tweede plot - Aantal oplaadmomenten per tijdsblok
+    kosten_histogram = data[(data['Laadtijd_min'] > 0)&(data['Activiteit']!='Rijden')].groupby('Tijdblok')['Laadtijd_min'].sum()
+    x = [i for i in range(24)]
+    y = [kosten_histogram[i] if i in kosten_histogram.index else 0 for i in range(24)]
+    fig2 = px.bar(x=x, y=y)
+ 
+    fig = sp.make_subplots(rows=1, cols=2,horizontal_spacing= 0.1, subplot_titles=('Gemiddelde energieprijs per tijdsblok over de maand', 'Laadminuten per tijdsblok over de maand'))
+    fig.add_trace(fig1.data[0], row=1, col=1)
+    fig.add_trace(fig2.data[0], row=1, col=2)
+    fig.update_layout(showlegend=False, xaxis_title='Tijdsblok', yaxis_title='Gemiddelde energieprijs', xaxis2_title='Het tijdsblok waarin opgeladen wordt', yaxis2_title='Aantal')
+    st.plotly_chart(fig)
+
+def Analyse_individueel(data,optie):
+    # Eerste plot - Gemiddelde energieprijzen per tijdsblok
+    data['Tijdblok'] = data['Tijdblok'].astype(int)
+    gemiddelde_per_tijdsblok = data[data['Activiteit']!='Rijden'].groupby('Tijdblok')['[EUR/MWh]'].mean()
+    fig1 = px.bar(x=gemiddelde_per_tijdsblok.index, y=gemiddelde_per_tijdsblok)
+ 
+    # Tweede plot - Aantal oplaadmomenten per tijdsblok
+    kosten_histogram = data[(data['Laadtijd_min'] > 0)&(data['Activiteit']!='Rijden')].groupby('Tijdblok')['Laadtijd_min'].sum()
+    x = [i for i in range(24)]
+    y = [kosten_histogram[i] if i in kosten_histogram.index else 0 for i in range(24)]
+    fig2 = px.bar(x=x, y=y)
+ 
+    fig = sp.make_subplots(rows=1, cols=2,horizontal_spacing= 0.1, subplot_titles=('Gemiddelde energieprijs per tijdsblok over de maand', 'Laadminuten per tijdsblok over de maand'))
+    fig.add_trace(fig1.data[0], row=1, col=1)
+    fig.add_trace(fig2.data[0], row=1, col=2)
+    fig.update_layout(showlegend=False, xaxis_title='Tijdsblok', yaxis_title='Gemiddelde energieprijs', xaxis2_title='Het tijdsblok waarin opgeladen wordt', yaxis2_title='Aantal')
+    return fig
 
 def download_excel(df):
 
@@ -421,9 +459,9 @@ def main():
         uploaded_file_prices = st.file_uploader('Upload Excelbestand met prijzendata, gestructueerd zoals de template voor prijzendata (afkomsting van Enstoe).', type=['xlsx'])
     
     if  uploaded_file_ritten and uploaded_file_prices is not None:
-        snelladen = st.number_input(label = 'Voer aantal euro/MWh in voor snelladen, tussen 0 en 600',min_value= 0,max_value=600,value = 300)
-        accu = st.number_input(label = 'voer waarde voor accu in, tussen 0 en 1500',min_value= 0,max_value=1500,value = 900)
-        afstand = st.slider(label = 'afstand, tussen 0 en 100',min_value= 0,max_value=100,value = 50,step = 10)
+        snelladen = st.number_input(label = 'Voer de prijs (euro/MWh) voor snelladen in, tussen de 0 en 600 euro.',min_value= 0,max_value=600,value = 300)
+        accu = st.number_input(label = 'Voer de waarde voor accu van vrachtwagen in, tussen 0 en 1500.',min_value= 0,max_value=1500,value = 900)
+        afstand = st.slider(label = 'Geef de afstand (km) van de afstand tussen laadpalen, tussen 0 en 100.',min_value= 0,max_value=100,value = 50,step = 10)
         
         try:
             check_file(uploaded_file_ritten)
@@ -445,9 +483,12 @@ def main():
                 st.stop()
           
             st.dataframe(voertuigkosten)
-            opties_voertuigen = st.selectbox(label = "Kies één van de " + str(len(df_merged["Voertuig"].unique())) +  " voertuigen om de bijbehorende rit te zien.", options = df_merged["Voertuig"].unique())
+            st.write("Hieronder 2 tabellen voor gemiddelde energieprijs en laadmomenten van alle vrachtwagen gedurende de gehele maand wanneer de vrachtwagen niet aan het rijden is.")
+            Analyse(df_merged)
+            st.write("Voor verdieping kan hier elk vrachtwagen verder geanalyseerd worden.")
+            opties_voertuigen = st.selectbox(label = "Kies één van de " + str(len(df_merged["Voertuig"].unique())) +  " voertuigen om hierop te verdiepen.", options = df_merged["Voertuig"].unique())
             
-            tab1, tab2 = st.tabs(["🔋 Accu", "💰 Kosten"])
+            tab1, tab2, tab3 = st.tabs(["🔋 Accu", "💰 Kosten","🚚 Laadmomenten"])
             tab1.subheader('Accu Waardes Over Tijd')
             fig1 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen] , x='eind_output', y='Accu')
             tab1.plotly_chart(fig1)
@@ -457,8 +498,9 @@ def main():
             fig2 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen], x='eind_output', y='Cumulatieve_kosten')
             tab2.plotly_chart(fig2)
             
-    
-            
+            tab3.subheader('Laadmomenten wanneer vrachtwagen niet aan rijden is.')
+            fig3 = Analyse_individueel(df_merged[df_merged['Voertuig'] ==opties_voertuigen],opties_voertuigen)
+            tab3.plotly_chart(fig3)
          
         except Exception as e:
             st.error(f'Error processing the file: {e}')
