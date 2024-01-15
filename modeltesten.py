@@ -490,12 +490,12 @@ def main():
             
             tab1, tab2, tab3 = st.tabs(["🔋 Accu", "💰 Kosten","🚚 Laadmomenten"])
             tab1.subheader('Accu waarden over tijd')
-            fig1 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen] , x='eind_output', y='Accu', labels = {'eind_output' = "Datum" })
+            fig1 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen] , x='eind_output', y='Accu', labels = {'eind_output' : "Datum" })
             tab1.plotly_chart(fig1)
             
             
             tab2.subheader('Kosten over tijd')
-            fig2 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen], x='eind_output', y='Cumulatieve_kosten', labels = {'eind_output' = "Datum" })
+            fig2 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen], x='eind_output', y='Cumulatieve_kosten', labels = {'eind_output' : "Datum" })
             tab2.plotly_chart(fig2)
             
             tab3.subheader('Laadmomenten wanneer vrachtwagen niet aan rijden is.')
