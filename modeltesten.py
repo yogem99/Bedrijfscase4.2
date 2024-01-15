@@ -461,7 +461,7 @@ def main():
     if  uploaded_file_ritten and uploaded_file_prices is not None:
         snelladen = st.number_input(label = 'Voer de prijs (euro/MWh) voor snelladen in, tussen de 0 en 600 euro.',min_value= 0,max_value=600,value = 300)
         accu = st.number_input(label = 'Voer de waarde voor accu van vrachtwagen in, tussen 0 en 1500.',min_value= 0,max_value=1500,value = 900)
-        afstand = st.slider(label = 'Geef de afstand (km) van de afstand tussen laadpalen, tussen 0 en 100.',min_value= 0,max_value=100,value = 50,step = 10)
+        afstand = st.slider(label = 'Geef de afstand (km) tussen laadpalen aan, tussen 0 en 100.',min_value= 0,max_value=100,value = 50,step = 10)
         
         try:
             check_file(uploaded_file_ritten)
@@ -489,13 +489,13 @@ def main():
             opties_voertuigen = st.selectbox(label = "Kies één van de " + str(len(df_merged["Voertuig"].unique())) +  " voertuigen om hierop te verdiepen.", options = df_merged["Voertuig"].unique())
             
             tab1, tab2, tab3 = st.tabs(["🔋 Accu", "💰 Kosten","🚚 Laadmomenten"])
-            tab1.subheader('Accu Waardes Over Tijd')
-            fig1 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen] , x='eind_output', y='Accu')
+            tab1.subheader('Accu waarden over tijd')
+            fig1 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen] , x='eind_output', y='Accu', labels = {'eind_output' = "Datum" })
             tab1.plotly_chart(fig1)
             
             
             tab2.subheader('Kosten over tijd')
-            fig2 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen], x='eind_output', y='Cumulatieve_kosten')
+            fig2 = px.line(df_merged[df_merged['Voertuig'] ==opties_voertuigen], x='eind_output', y='Cumulatieve_kosten', labels = {'eind_output' = "Datum" })
             tab2.plotly_chart(fig2)
             
             tab3.subheader('Laadmomenten wanneer vrachtwagen niet aan rijden is.')
