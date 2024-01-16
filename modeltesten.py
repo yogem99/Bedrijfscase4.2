@@ -483,7 +483,7 @@ def main():
                 st.stop()
           
             st.dataframe(voertuigkosten)
-            st.write("Hieronder 2 tabellen voor gemiddelde energieprijs en laadmomenten van alle vrachtwagen gedurende de gehele maand wanneer de vrachtwagen niet aan het rijden is.")
+            st.write("Hieronder 2 tabellen voor gemiddelde energieprijs en laadmomenten van alle vrachtwagens gedurende de gehele maand wanneer de vrachtwagen niet aan het rijden is.")
             Analyse(df_merged)
             st.write("Voor verdieping kan hier elk vrachtwagen verder geanalyseerd worden.")
             opties_voertuigen = st.selectbox(label = "Kies één van de " + str(len(df_merged["Voertuig"].unique())) +  " voertuigen om hierop te verdiepen.", options = df_merged["Voertuig"].unique())
